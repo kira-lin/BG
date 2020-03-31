@@ -1,5 +1,4 @@
 package edu.usc.bg.server;
-import com.mitrallc.sql.KosarSoloDriver;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -14,9 +13,6 @@ import java.util.Properties;
 import java.util.Scanner;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
-import kosar.AsyncSocketServer;
-import kosar.CoreClient;
-
 import edu.usc.bg.base.Client;
 import edu.usc.bg.base.ClientDataStats;
 import edu.usc.bg.validator.ValidationMainClass;
@@ -265,14 +261,6 @@ public class RequestHandler extends Thread {
 					
 					
 					}
-					if (CoreClient.enableCache && dbname.toLowerCase().contains("kosar")){
-						AsyncSocketServer.shutdown();
-					}
-
-					if (dbname.contains("JdbcDBClient_KOSAR")) {
-						System.out.println("Shutting down Core transparent client");
-						KosarSoloDriver.closeSockets();
-						}
 					System.out.println("Exiting...");
 					System.exit(0);
 					}catch (Exception e){

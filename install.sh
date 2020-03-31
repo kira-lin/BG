@@ -35,6 +35,10 @@ git clone https://github.com/scdblab/BG.git
 # cp ~/BG.jar BG/
 # cd BG/
 
+# Notice BG.jar does not include the library. When you run commands below, make sure you include the library in classpath.
+# For example, replace java -jar BG.jar with java -cp BG.jar:lib/mysql-connector-java-5.1.18-bin.jar edu.usc.bg.BGMainClass when you use mysql
+# Also remember to replace user and password with the value you set in mysql.
+
 # 3. create the schema.
 # java -jar BG.jar onetime -schema -db MySQL.Basic1R1TMySQLClient -p db.user=user -p db.passwd=123456 -p insertimage=false -p db.url=jdbc:mysql://127.0.0.1:3306/bg -p db.driver=com.mysql.jdbc.Driver -p dbtype=mysql -p loadmode=actualload -p machineid=0 -p numclients=1 -p insertimage=false
 

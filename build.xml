@@ -15,84 +15,23 @@
         </fileset>
     </path>
 
-    <target name="dbcompile-gemfire" depends="compile">
-        <property name="db.dir" value="db/gemfire" />
-        <antcall target="dbcompile" />
-    </target>
-
-    <target name="dbcompile-infinispan-5.0" depends="compile">
-        <property name="db.dir" value="db/infinispan-5.0" />
-        <antcall target="dbcompile" />
-    </target>
-
-    <target name="dbcompile-cassandra-0.5" depends="compile">
-      <property name="db.dir" value="db/cassandra-0.5"/>
-      <antcall target="dbcompile"/>
-    </target>
-
-  <target name="dbcompile-cassandra-0.6" depends="compile">
-    <property name="db.dir" value="db/cassandra-0.6"/>
-    <antcall target="dbcompile"/>
-  </target>
-
-  <target name="dbcompile-cassandra-0.7" depends="compile">
-    <property name="db.dir" value="db/cassandra-0.7"/>
-    <antcall target="dbcompile"/>
-  </target>
-
-        <target name="dbcompile-cassandra-0.8" depends="compile">
-                <property name="db.dir" value="db/cassandra-0.8"/>
-                <antcall target="dbcompile"/>
-        </target>
-
-    <target name="dbcompile-cassandra-1.0.6" depends="compile">
-            <property name="db.dir" value="db/cassandra-1.0.6"/>
-            <antcall target="dbcompile"/>
-    </target>
-
-  <target name="dbcompile-hbase" depends="compile">
-    <property name="db.dir" value="db/hbase"/>
-    <antcall target="dbcompile"/>
-  </target>
-
   <target name="dbcompile-mongodb" depends="compile">
     <property name="db.dir" value="db/MongoDB"/>
     <antcall target="dbcompile"/>
   </target>
 
-  <target name="dbcompile-voldemort" depends="compile">
-    <property name="db.dir" value="db/voldemort"/>
-    <antcall target="dbcompile"/>
-  </target>
-
-<target name="dbcompile-test" depends="compile">
-    <property name="db.dir" value="db/BGVerifyCorrectness"/>
-    <antcall target="dbcompile"/>
-  </target>
-
-<target name="dbcompile-simple" depends="compile">
-    <property name="db.dir" value="db/simple"/>
-    <antcall target="dbcompile"/>
-  </target>
-
-
-     <target name="dbcompile-jdbc" depends="compile">
-       <property name="db.dir" value="db/jdbc"/>
-       <antcall target="dbcompile"/>
-     </target>
-
-    <target name="dbcompile-redis" depends="compile">
-        <property name="db.dir" value="db/redis"/>
-        <antcall target="dbcompile"/>
+  <target name="dbcompile-test" depends="compile">
+      <property name="db.dir" value="db/BGVerifyCorrectness"/>
+      <antcall target="dbcompile"/>
     </target>
 
-     <target name="dbcompile-mapkeeper" depends="compile">
-            <property name="db.dir" value="db/mapkeeper"/>
-            <antcall target="dbcompile"/>
-     </target>
+  <target name="dbcompile-mysql" depends="compile">
+      <property name="db.dir" value="db/mysql"/>
+      <antcall target="dbcompile"/>
+    </target>
 
-    <target name="dbcompile-nosqldb" depends="compile">
-      <property name="db.dir" value="db/nosqldb"/>
+    <target name="dbcompile-jdbc" depends="compile">
+      <property name="db.dir" value="db/jdbc"/>
       <antcall target="dbcompile"/>
     </target>
 
@@ -118,7 +57,14 @@
     </target>
 
     <target name ="makejar" description="Create a jar for the BG project">
-         <jar jarfile="build/bg.jar" includes="**/*.class" basedir="${classes.dir}"/>
+        <!-- <jar jarfile="build/bg.jar" includes="**/*.class" basedir="${classes.dir}"/> -->
+        <jar destfile="build/BG.jar">
+            <fileset dir="${classes.dir}"/>
+            <manifest>
+              <attribute name="Main-Class"
+                        value="edu.usc.bg.BGMainClass"/>
+            </manifest>
+        </jar>
     </target>
 
     <target name="clean">
@@ -127,14 +73,14 @@
        </delete>
     </target>
 
-   <target name="doc">
+   <!-- <target name="doc">
       <javadoc destdir="${doc.dir}/javadoc" packagenames="edu.usc.bg,edu.usc.bg.base,edu.usc.bg.base.generator,edu.usc.bg.generator,edu.usc.bg.measurements,edu.usc.bg.validator,edu.usc.bg.workloads">
          <fileset dir="." defaultexcludes="yes">
            <include name="src/**"/>
            <include name="db/*/src/**"/>
          </fileset>
       </javadoc>
-   </target>
+   </target> -->
 
 </project>
 

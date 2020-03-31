@@ -48,11 +48,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.mitrallc.sql.KosarSoloDriver;
-
-import kosar.AsyncSocketServer;
-import kosar.CoreClient;
 import edu.usc.bg.BGMainClass;
 import edu.usc.bg.Distribution;
 import edu.usc.bg.KillThread;
@@ -1625,23 +1620,6 @@ public class Client {
 
 			System.out.println(EXECUTIONDONEMSG);
 			System.out.println(Client.SHUTDOWNMSG);
-			if (dbname.contains("JdbcDBClient_KOSAR")&&(numBGClients == 1 || BENCHMARKING_MODE == PARTITIONED || BENCHMARKING_MODE==HYBRID_DELEGATE || BENCHMARKING_MODE==HYBRID_RETAIN)) {
-
-				KosarSoloDriver.closeSockets();
-			}
-
-			if ((dbname.toLowerCase().contains("kosar"))
-					&& CoreClient.enableCache
-					&& (numBGClients == 1 || BENCHMARKING_MODE == PARTITIONED) 
-					|| BENCHMARKING_MODE == HYBRID_DELEGATE 
-					|| BENCHMARKING_MODE == HYBRID_RETAIN) {
-				try {
-					AsyncSocketServer.shutdown();
-				} catch (Exception e) {
-					e.printStackTrace(System.out);
-				}
-			}
-
 		}
 	}
 
