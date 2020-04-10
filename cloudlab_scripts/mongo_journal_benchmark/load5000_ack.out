@@ -1,0 +1,27 @@
+15:25:47.176 [Thread-3] WARN  org.mongodb.driver.uri - Uri option 'j' has been deprecated, use 'journal' instead.
+15:25:47.176 [Thread-3] WARN  org.mongodb.driver.uri - Uri option 'j' has been deprecated, use 'journal' instead.
+mongo client connection created with mongodb://node0:27017/ycsb?j=true
+[OVERALL], RunTime(ms), 15412
+[OVERALL], Throughput(ops/sec), 324.4225279003374
+[TOTAL_GCS_PS_Scavenge], Count, 0
+[TOTAL_GC_TIME_PS_Scavenge], Time(ms), 0
+[TOTAL_GC_TIME_%_PS_Scavenge], Time(%), 0.0
+[TOTAL_GCS_PS_MarkSweep], Count, 0
+[TOTAL_GC_TIME_PS_MarkSweep], Time(ms), 0
+[TOTAL_GC_TIME_%_PS_MarkSweep], Time(%), 0.0
+[TOTAL_GCs], Count, 0
+[TOTAL_GC_TIME], Time(ms), 0
+[TOTAL_GC_TIME_%], Time(%), 0.0
+[CLEANUP], Operations, 1
+[CLEANUP], AverageLatency(us), 4418.0
+[CLEANUP], MinLatency(us), 4416
+[CLEANUP], MaxLatency(us), 4419
+[CLEANUP], 95thPercentileLatency(us), 4419
+[CLEANUP], 99thPercentileLatency(us), 4419
+[INSERT], Operations, 5000
+[INSERT], AverageLatency(us), 2933.5954
+[INSERT], MinLatency(us), 2206
+[INSERT], MaxLatency(us), 107007
+[INSERT], 95thPercentileLatency(us), 3371
+[INSERT], 99thPercentileLatency(us), 3985
+[INSERT], Return=OK, 5000

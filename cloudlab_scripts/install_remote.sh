@@ -1,10 +1,5 @@
 #!/bin/bash
 
-node0=zhilin@amd006.utah.cloudlab.us
-node1=zhilin@amd028.utah.cloudlab.us
-node2=zhilin@amd017.utah.cloudlab.us
-node3=zhilin@amd014.utah.cloudlab.us
-
 install_mongo () {
     ssh $1 "wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add - && \
             echo \"deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.2 multiverse\" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list && \
@@ -32,6 +27,13 @@ install_mysql_datanode () {
             sudo apt install libclass-methodmaker-perl && \
             sudo dpkg -i mysql-cluster-community-data-node_8.0.19-1ubuntu18.04_amd64.deb"
 }
+
+install_dependency () {
+    ssh $1 "sudo apt update && \
+            sudo apt install -y openjdk-8-jdk maven"
+}
+
+source ./nodes
 
 install_mongo $node0
 install_mongo $node1

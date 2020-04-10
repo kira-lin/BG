@@ -1,14 +1,12 @@
 #!/bin/bash
 
-node0=zhilin@amd006.utah.cloudlab.us
-node1=zhilin@amd028.utah.cloudlab.us
-node2=zhilin@amd017.utah.cloudlab.us
-
 mongod_repl () {
     scp mongod_repl.conf $1:/users/zhilin/mongod_repl.conf
     ssh $1 "mkdir mongodb && mkdir mongodb_log && touch mongodb_log/mongod.log"
     ssh $1 "mongod --config mongod_repl.conf"
 }
+
+source ./nodes
 
 if [ "$1" = "repl" ]
 then
