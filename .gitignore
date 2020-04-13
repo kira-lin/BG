@@ -3,3 +3,6 @@ build/
 .git/
 .project
 DistrStats
+.vscode/
+read0-*
+update0-*

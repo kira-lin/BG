@@ -20,9 +20,10 @@ import org.bson.conversions.Bson;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -38,13 +39,13 @@ import edu.usc.bg.base.ObjectByteIterator;
 public class MongoBGClient extends DB {
 
 	MongoClient mongoClient;
-	private String ipAddress;
+	private String URI;
 
 	public static final String MONGO_DB_NAME = "BG";
 	public static final String MONGO_USER_COLLECTION = "users";
 	public static final String KEY_FRIEND = "f";
 	public static final String KEY_PENDING = "p";
-	public static final String KEY_MONGO_DB_IP = "mongoip";
+	public static final String KEY_MONGO_DB_URI = "mongodb_uri";
 
 	public static final int LIST_FRIENDS = 10;
 
@@ -54,8 +55,8 @@ public class MongoBGClient extends DB {
 		return friendList;
 	}
 
-	public MongoBGClient(String ipAddress) {
-		this.ipAddress = ipAddress;
+	public MongoBGClient(String URI) {
+		this.URI = URI;
 	}
 
 	public MongoBGClient() {
@@ -64,6 +65,30 @@ public class MongoBGClient extends DB {
 	}
 
 	private final Logger log = LoggerFactory.getLogger(MongoBGClient.class);
+
+	@Override
+	public boolean init() throws DBException {
+		System.out.println("###init");
+		if (getProperties().getProperty(KEY_MONGO_DB_URI) != null) {
+			this.URI = getProperties().getProperty(KEY_MONGO_DB_URI);
+		}
+
+		this.mongoClient = MongoClients.create(this.URI);
+
+		// if (getProperties().getProperty("journaled") != null) {
+		// 	this.journaled = Boolean.parseBoolean(getProperties().getProperty("journaled"));
+		// }
+
+		// if (journaled) {
+		// 	this.mongoClient = new MongoClient(this.ipAddress, new MongoClientOptions.Builder()
+		// 			.serverSelectionTimeout(1000).connectionsPerHost(500).writeConcern(WriteConcern.JOURNALED).build());
+		// } else {
+		// 	this.mongoClient = new MongoClient(this.ipAddress,
+		// 			new MongoClientOptions.Builder().serverSelectionTimeout(1000).connectionsPerHost(500)
+		// 					.writeConcern(WriteConcern.ACKNOWLEDGED).build());
+		// }
+		return true;
+	}
 
 	@Override
 	public int insertEntity(String entitySet, String entityPK, HashMap<String, ByteIterator> values,
@@ -208,30 +233,6 @@ public class MongoBGClient extends DB {
 		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
 				.getCollection(MONGO_USER_COLLECTION);
 		return coll.find(eq("_id", String.valueOf(profileOwnerID))).first().get(KEY_PENDING, List.class);
-	}
-
-	boolean journaled = false;
-
-	@Override
-	public boolean init() throws DBException {
-		System.out.println("###init");
-		if (getProperties().getProperty(KEY_MONGO_DB_IP) != null) {
-			this.ipAddress = getProperties().getProperty(KEY_MONGO_DB_IP);
-		}
-
-		if (getProperties().getProperty("journaled") != null) {
-			this.journaled = Boolean.parseBoolean(getProperties().getProperty("journaled"));
-		}
-
-		if (journaled) {
-			this.mongoClient = new MongoClient(this.ipAddress, new MongoClientOptions.Builder()
-					.serverSelectionTimeout(1000).connectionsPerHost(500).writeConcern(WriteConcern.JOURNALED).build());
-		} else {
-			this.mongoClient = new MongoClient(this.ipAddress,
-					new MongoClientOptions.Builder().serverSelectionTimeout(1000).connectionsPerHost(500)
-							.writeConcern(WriteConcern.ACKNOWLEDGED).build());
-		}
-		return true;
 	}
 
 	@Override
@@ -504,7 +505,7 @@ public class MongoBGClient extends DB {
 
 	@Override
 	public void createSchema(Properties props) {
-		mongoClient.dropDatabase(MONGO_DB_NAME);
+		mongoClient.getDatabase(MONGO_DB_NAME).drop();
 		MongoDatabase db = mongoClient.getDatabase(MONGO_DB_NAME);
 		db.createCollection(MONGO_USER_COLLECTION);
 	}
