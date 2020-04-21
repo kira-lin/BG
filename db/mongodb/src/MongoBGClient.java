@@ -43,6 +43,7 @@ public class MongoBGClient extends DB {
 
 	public static final String MONGO_DB_NAME = "BG";
 	public static final String MONGO_USER_COLLECTION = "users";
+	public static final String MONGO_MANIPUNATION_COLLECTION = "manipunations";
 	public static final String KEY_FRIEND = "f";
 	public static final String KEY_PENDING = "p";
 	public static final String KEY_MONGO_DB_URI = "mongodb_uri";
@@ -416,38 +417,142 @@ public class MongoBGClient extends DB {
 				new BasicDBObject("$addToSet", new Document(KEY_PENDING, String.valueOf(inviterID))));
 		return 0;
 	}
-
+	
 	@Override
 	public int viewTopKResources(int requesterID, int profileOwnerID, int k,
 			Vector<HashMap<String, ByteIterator>> result) {
-		// TODO Auto-generated method stub
-		return 0;
+		int retVal = 0;
+
+		if (profileOwnerID < 0 || requesterID < 0 || k < 0)
+			return ERROR;
+		
+		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
+			.getCollection(MONGO_USER_COLLECTION);
+		
+		DBObject qObj1 = new BasicDBObject().append("walluserid", Integer.toString(profileOwnerID));
+		DBObject qObj2 = new BasicDBObject().append("_id", -1);
+		DBCursor queryRes = coll.find(qObj1).sort(qObj2).limit(k);
+		
+		while(queryRes.iterator().hasNext()){
+			HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
+			DBObject eaRes = new BasicDBObject();
+			eaRes.putAll((DBObject) it.next());
+			values.putAll(eaRes.toMap());
+			if(values.get("_id") != null){
+				String tmp = values.get("_id")+"";
+				values.remove("_id");
+				values.put("rid",new ObjectByteIterator(tmp.getBytes()));
+			}
+			if(values.get("walluserid") != null){
+				String tmp = values.get("walluserid")+"";
+				values.remove("walluserid");
+				values.put("walluserid",new ObjectByteIterator(tmp.getBytes()));
+			}
+			if(values.get("creatorid") != null){
+				String tmp = values.get("creatorid")+"";
+				values.remove("creatorid");
+				values.put("creatorid",new ObjectByteIterator(tmp.getBytes()));
+			}
+			result.add(vals);
+		}
+		queryRes.close();
+		return retVal;
 	}
 
 	@Override
 	public int getCreatedResources(int creatorID, Vector<HashMap<String, ByteIterator>> result) {
-		// TODO Auto-generated method stub
-		return 0;
+		int retVal = 0;
+		if(creatorID < 0)
+			return -1;
+		
+		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
+			.getCollection(MONGO_USER_COLLECTION);
+		
+		DBObject qObj = new BasicDBObject().append("creatorid", Integer.toString(creatorID));
+		DBCursor queryRes = coll.find(qObj);
+		
+		while(queryRes.iterator().hasNext()){
+			HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
+			DBObject eaRes = new BasicDBObject();
+			eaRes.putAll((DBObject) it.next());
+			values.putAll(eaRes.toMap());
+			if(values.get("_id") != null){
+				String tmp = values.get("_id")+"";
+				vals.remove("_id");
+				vals.put("rid",new ObjectByteIterator(tmp.getBytes()));
+			}
+			if(values.get("creatorid") != null){
+				String tmp = values.get("creatorid")+"";
+				values.remove("creatorid");
+				values.put("creatorid",new ObjectByteIterator(tmp.getBytes()));
+			}
+			result.add(values);
+		}
+		queryRes.close();
+		
+		return retVal;
 	}
 
 	@Override
 	public int viewCommentOnResource(int requesterID, int profileOwnerID, int resourceID,
 			Vector<HashMap<String, ByteIterator>> result) {
-		// TODO Auto-generated method stub
-		return 0;
+		int retVal = 0;
+		if(profileOwnerID < 0 || requesterID < 0 || resourceID < 0)
+			return -1;
+
+		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
+			.getCollection(MONGO_MANIPUNATION_COLLECTION);
+		DBObject qObj = new BasicDBObject().append("rid", Integer.toString(resourceID));
+		DBCursor queryRes = collection.find(qObj);
+
+		while(queryRes.iterator().hasNext()){
+			HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
+			DBObject eaRes = new BasicDBObject();
+			eaRes.putAll((DBObject) it.next());
+			values.putAll(oneRes.toMap());
+			result.add(values);
+		}
+		queryRes.close();
+		return retVal;
 	}
 
 	@Override
 	public int postCommentOnResource(int commentCreatorID, int resourceCreatorID, int resourceID,
 			HashMap<String, ByteIterator> values) {
-		// TODO Auto-generated method stub
-		return 0;
+		if(profileOwnerID < 0 || commentCreatorID < 0 || resourceID < 0)
+			return -1;
+
+		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
+			.getCollection(MONGO_MANIPUNATION_COLLECTION);
+		
+		HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
+		values.put("mid", commentValues.get("mid"));
+		values.put("creatorid",new ObjectByteIterator(Integer.toString(profileOwnerID).getBytes()));
+		values.put("rid", new ObjectByteIterator(Integer.toString(resourceID).getBytes()));
+		values.put("modifierid", new ObjectByteIterator(Integer.toString(commentCreatorID).getBytes()));
+		values.put("timestamp",commentValues.get("timestamp"));
+		values.put("type", commentValues.get("type") );
+		values.put("content", commentValues.get("content"));
+
+		DBObject r = new BasicDBObject();
+		for(String k: values.keySet()) {
+			r.put(k, values.get(k).toString());
+		}
+
+		WriteResult res = coll.insert(r,writeConcern);
+		return res.getError() == null ? 0 : -1;
 	}
 
 	@Override
 	public int delCommentOnResource(int resourceCreatorID, int resourceID, int manipulationID) {
-		// TODO Auto-generated method stub
-		return 0;
+		int retVal = 0;
+		if(resourceCreatorID < 0 || resourceID < 0 || manipulationID < 0)
+			return -1;
+		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
+			.getCollection(MONGO_MANIPUNATION_COLLECTION);
+		DBObject qObj = new BasicDBObject().append("mid", Integer.toString(manipulationID)).append("rid", Integer.toString(resourceID));		
+		coll.remove(qObj);
+		return retVal;
 	}
 
 	public int thawFriendInviter(int friendid1, int friendid2) {
