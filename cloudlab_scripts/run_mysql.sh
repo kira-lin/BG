@@ -4,7 +4,7 @@ mysql_master_setup () {
     scp config.ini $1:/users/zhilin/config.ini
     ssh $1 'echo "[mysqld]" | sudo tee -a /etc/mysql/mysql.cnf && \
             echo "ndbcluster" | sudo tee -a /etc/mysql/mysql.cnf && \
-            echo "default_time_zone=\"-7:00\" && \"
+            echo "default_time_zone=\"-7:00\"" && \"
             echo "[mysql_cluster]" | sudo tee -a /etc/mysql/mysql.cnf && \
             echo "ndb-connectstring=node0" | sudo tee -a /etc/mysql/mysql.cnf && \
             mkdir mysql-cluster'

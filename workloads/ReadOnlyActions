@@ -23,7 +23,6 @@ ViewTopKResourcesAction=0.4
 ViewCommentsOnResourceAction=0.1
 PostCommentOnResourceAction=0
 DeleteCommentOnResourceAction=0
-ViewNewsFeedAction=0
 
 requestdistribution=dzipfian
 zipfianmean=0.27
