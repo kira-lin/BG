@@ -570,7 +570,7 @@ public class MongoTXBGClient extends DB {
 			session.commitTransaction();
 		} catch (Exception e) {
 			retVal = -1;
-			System.err.printf("friendid1=%d, friendid2=%d, %s\n", friendid1, friendid2, e.getMessage());
+			// System.err.printf("friendid1=%d, friendid2=%d, %s\n", friendid1, friendid2, e.getMessage());
 			session.abortTransaction();
 		} finally {
 			session.close();
