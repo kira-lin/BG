@@ -182,11 +182,11 @@ public class MongoTXBGClient extends DB {
 		List<Bson> list = new ArrayList<>();
 		list.add(new BasicDBObject("$match",
 				new BasicDBObject("_id", new BasicDBObject("$eq", String.valueOf(profileOwnerID)))));
-		BasicDBList field = new BasicDBList();
-		field.add("$f");
-		field.add(0);
-		field.add(LIST_FRIENDS);
-		BasicDBObject bobj = new BasicDBObject("$project", new BasicDBObject("f", new BasicDBObject("$slice", field)));
+		// BasicDBList field = new BasicDBList();
+		// field.add("$f");
+		// field.add(0);
+		// field.add(LIST_FRIENDS);
+		BasicDBObject bobj = new BasicDBObject("$project", new BasicDBObject("f", 1));
 		list.add(bobj);
 		Document userProfile = coll.aggregate(list).first();
 		List<String> friends = userProfile.get(KEY_FRIEND, List.class);
@@ -208,7 +208,7 @@ public class MongoTXBGClient extends DB {
 		obj.put("tel", 1);
 		bobj = new BasicDBObject("$project", obj);
 		queries.add(bobj);
-		queries.add(new BasicDBObject("$limit", LIST_FRIENDS));
+		// queries.add(new BasicDBObject("$limit", LIST_FRIENDS));
 
 		MongoCursor<Document> friendsDocs = coll.aggregate(queries).iterator();
 
@@ -251,11 +251,11 @@ public class MongoTXBGClient extends DB {
 		List<Bson> list = new ArrayList<>();
 		list.add(new BasicDBObject("$match",
 				new BasicDBObject("_id", new BasicDBObject("$eq", String.valueOf(profileOwnerID)))));
-		BasicDBList field = new BasicDBList();
-		field.add("$p");
-		field.add(0);
-		field.add(LIST_FRIENDS);
-		BasicDBObject bobj = new BasicDBObject("$project", new BasicDBObject("p", new BasicDBObject("$slice", field)));
+		// BasicDBList field = new BasicDBList();
+		// field.add("$p");
+		// field.add(0);
+		// field.add(LIST_FRIENDS);
+		BasicDBObject bobj = new BasicDBObject("$project", new BasicDBObject("p", 1));
 		list.add(bobj);
 		Document userProfile = coll.aggregate(list).first();
 		List<String> pending = userProfile.get(KEY_PENDING, List.class);
@@ -277,7 +277,7 @@ public class MongoTXBGClient extends DB {
 		obj.put("tel", 1);
 		bobj = new BasicDBObject("$project", obj);
 		queries.add(bobj);
-		queries.add(new BasicDBObject("$limit", LIST_FRIENDS));
+		// queries.add(new BasicDBObject("$limit", LIST_FRIENDS));
 
 		MongoCursor<Document> friendsDocs = coll.aggregate(queries).iterator();
 
@@ -379,41 +379,38 @@ public class MongoTXBGClient extends DB {
 		return coll == null || coll.isEmpty();
 	} 
 
-	// public int acceptFriendInviter(int inviterID, int inviteeID) {
-	// 	MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
-	// 			.getCollection(MONGO_USER_COLLECTION);
-
-	// 	UpdateResult result = coll.updateOne(eq("_id", String.valueOf(inviterID)),
-	// 			new BasicDBObject("$addToSet", new Document(KEY_FRIEND, String.valueOf(inviteeID))));
-	// 	return 0;
-	// }
-
-	// public int acceptFriendInvitee(int inviterID, int inviteeID) {
-	// 	MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
-	// 			.getCollection(MONGO_USER_COLLECTION);
-	// 	BasicDBObject inviteeUpdate = new BasicDBObject();
-	// 	inviteeUpdate.put("$addToSet", new Document(KEY_FRIEND, String.valueOf(inviterID)));
-	// 	inviteeUpdate.put("$pull", new Document(KEY_PENDING, String.valueOf(inviterID)));
-	// 	coll.updateOne(eq("_id", String.valueOf(inviteeID)), inviteeUpdate);
-	// 	return 0;
-	// }
-
 	@Override
 	public int acceptFriend(int inviterID, int inviteeID) {
+		for (int i = 0; i < 100; i++) {
+			if (acceptFriendHelper(inviterID, inviteeID) == 0) {
+				return 0;
+			}
+		}
+		return -1;
+	}
+
+	private int acceptFriendHelper(int inviterID, int inviteeID) {
 		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
 				.getCollection(MONGO_USER_COLLECTION);
-		ClientSession session = mongoClient.startSession();
 		BasicDBObject inviteeUpdate = new BasicDBObject();
 		inviteeUpdate.put("$addToSet", new Document(KEY_FRIEND, String.valueOf(inviterID)));
 		inviteeUpdate.put("$pull", new Document(KEY_PENDING, String.valueOf(inviterID)));
-		// System.out.println("accept friend transaction start");
-		session.startTransaction();
-		coll.updateOne(session, eq("_id", String.valueOf(inviterID)),
-				new BasicDBObject("$addToSet", new Document(KEY_FRIEND, String.valueOf(inviteeID))));
-		coll.updateOne(session, eq("_id", String.valueOf(inviteeID)), inviteeUpdate);
-		session.commitTransaction();
-		session.close();
-		return 0;
+		ClientSession session = mongoClient.startSession();
+		int retVal = 0;
+		try {
+			session.startTransaction();
+			coll.updateOne(session, eq("_id", String.valueOf(inviterID)),
+						   new BasicDBObject("$addToSet", new Document(KEY_FRIEND, String.valueOf(inviteeID))));
+			coll.updateOne(session, eq("_id", String.valueOf(inviteeID)), inviteeUpdate);
+			session.commitTransaction();
+		} catch (Exception e) {
+			session.abortTransaction();
+			// System.err.printf("friendid1=%d, friendid2=%d, %s\n", inviterID, inviteeID, e.getMessage());
+			retVal = -1;
+		} finally {
+			session.close();
+		}
+		return retVal;
 	}
 
 	// update single document, delete inviterID from pending friends list
@@ -421,6 +418,7 @@ public class MongoTXBGClient extends DB {
 	public int rejectFriend(int inviterID, int inviteeID) {
 		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
 				.getCollection(MONGO_USER_COLLECTION);
+		// System.out.printf("rejectFriend: updated key is %d\n", inviteeID);
 		coll.updateOne(eq("_id", String.valueOf(inviteeID)),
 				new BasicDBObject("$pull", new Document(KEY_PENDING, String.valueOf(inviterID))));
 		return 0;
@@ -431,7 +429,7 @@ public class MongoTXBGClient extends DB {
 	public int inviteFriend(int inviterID, int inviteeID) {
 		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
 				.getCollection(MONGO_USER_COLLECTION);
-
+		// System.out.printf("inviteFriend: updated key is %d\n", inviteeID);
 		coll.updateOne(eq("_id", String.valueOf(inviteeID)),
 				new BasicDBObject("$addToSet", new Document(KEY_PENDING, String.valueOf(inviterID))));
 		return 0;
@@ -547,35 +545,37 @@ public class MongoTXBGClient extends DB {
 		return retVal;
 	}
 
-	// public int thawFriendInviter(int friendid1, int friendid2) {
-	// 	MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
-	// 			.getCollection(MONGO_USER_COLLECTION);
-
-	// 	coll.updateOne(eq("_id", String.valueOf(friendid1)),
-	// 			new BasicDBObject("$pull", new Document(KEY_FRIEND, String.valueOf(friendid2))));
-	// 	return 0;
-	// }
-
-	// public int thawFriendInvitee(int friendid1, int friendid2) {
-		
-	// 	coll.updateOne(eq("_id", String.valueOf(friendid2)),
-	// 			new BasicDBObject("$pull", new Document(KEY_FRIEND, String.valueOf(friendid1))));
-	// 	return 0;
-	// }
-
 	@Override
 	public int thawFriendship(int friendid1, int friendid2) {
+		for (int i = 0; i < 100; i++) {
+			if (thawFriendshipHelper(friendid1, friendid2) == 0) {
+				return 0;
+			}
+		}
+		// System.err.println("Failed to thaw frienship after 5 tries");
+		return -1;
+	}
+
+	private int thawFriendshipHelper(int friendid1, int friendid2) {
 		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
-				.getCollection(MONGO_USER_COLLECTION);
+		.getCollection(MONGO_USER_COLLECTION);
+		int retVal = 0;
 		ClientSession session = mongoClient.startSession();
-		session.startTransaction();
-		coll.updateOne(session, eq("_id", String.valueOf(friendid1)),
-				new BasicDBObject("$pull", new Document(KEY_FRIEND, String.valueOf(friendid2))));
-		coll.updateOne(session, eq("_id", String.valueOf(friendid2)),
-				new BasicDBObject("$pull", new Document(KEY_FRIEND, String.valueOf(friendid1))));
-		session.commitTransaction();
-		session.close();
-		return 0;
+		try {
+			session.startTransaction();
+			coll.updateOne(session, eq("_id", String.valueOf(friendid1)),
+						   new BasicDBObject("$pull", new Document(KEY_FRIEND, String.valueOf(friendid2))));
+			coll.updateOne(session, eq("_id", String.valueOf(friendid2)),
+						   new BasicDBObject("$pull", new Document(KEY_FRIEND, String.valueOf(friendid1))));
+			session.commitTransaction();
+		} catch (Exception e) {
+			retVal = -1;
+			System.err.printf("friendid1=%d, friendid2=%d, %s\n", friendid1, friendid2, e.getMessage());
+			session.abortTransaction();
+		} finally {
+			session.close();
+		}
+		return retVal;
 	}
 
 	@Override
@@ -612,6 +612,8 @@ public class MongoTXBGClient extends DB {
 		mongoClient.getDatabase(MONGO_DB_NAME).drop();
 		MongoDatabase db = mongoClient.getDatabase(MONGO_DB_NAME);
 		db.createCollection(MONGO_USER_COLLECTION);
+		db.createCollection(MONGO_MANIPULATION_COLLECTION);
+		db.createCollection(MONGO_RESOURCE_COLLECTION);
 	}
 
 	@Override
@@ -642,9 +644,11 @@ public class MongoTXBGClient extends DB {
 	public int queryPendingFriendshipIds(int memberID, Vector<Integer> pendingIds) {
 		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
 				.getCollection(MONGO_USER_COLLECTION);
-		Document userProfile = coll.find(eq("_id", memberID)).projection(Projections.include(KEY_PENDING)).first();
-		List<Integer> pendingFriends = userProfile.getList(KEY_PENDING, Integer.class);
-		pendingIds.addAll(pendingFriends);
+		Document userProfile = coll.find(eq("_id", String.valueOf(memberID))).projection(Projections.include(KEY_PENDING)).first();
+		List<String> pendingFriends = userProfile.get(KEY_PENDING, List.class);
+		for (String pid : pendingFriends) {
+			pendingIds.addElement(Integer.parseInt(pid));
+		}
 		return 0;
 	}
 
@@ -652,10 +656,11 @@ public class MongoTXBGClient extends DB {
 	public int queryConfirmedFriendshipIds(int memberID, Vector<Integer> confirmedIds) {
 		MongoCollection<Document> coll = this.mongoClient.getDatabase(MONGO_DB_NAME)
 				.getCollection(MONGO_USER_COLLECTION);
-		Document userProfile = coll.find(eq("_id", memberID)).projection(Projections.include(KEY_FRIEND)).first();
-		List<Integer> confirmedFriends = userProfile.getList(KEY_FRIEND, Integer.class);
-		confirmedIds.addAll(confirmedFriends);
-		// System.out.println(confirmedFriends);
+		Document userProfile = coll.find(eq("_id", String.valueOf(memberID))).projection(Projections.include(KEY_FRIEND)).first();
+		List<String> confirmedFriends = userProfile.get(KEY_FRIEND, List.class);
+		for (String cid : confirmedFriends) {
+			confirmedIds.addElement(Integer.parseInt(cid));
+		}
 		return 0;
 	}
 }

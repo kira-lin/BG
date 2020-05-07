@@ -1018,7 +1018,7 @@ public class Client {
 				printer.write("OVERALL",
 						"Staleness(staleSessions/totalSessions)",
 						((double) benchmarkStats.getNumStaleSessions())
-						/ benchmarkStats.getNumStaleSessions());
+						/ benchmarkStats.getNumReadSessions());
 			if (benchmarkStats.getNumPrunedOps() != null)
 				printer.write("OVERALL", "Pruned(ops)",
 						benchmarkStats.getNumPrunedOps());

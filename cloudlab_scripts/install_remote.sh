@@ -1,14 +1,14 @@
 #!/bin/bash
 
 install_mongo () {
-    ssh $1 "wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add - && \
+    ssh -p $2 $1 "wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add - && \
             echo \"deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.2 multiverse\" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list && \
             sudo apt update && \
-            sudo apt install -y mongodb"
+            sudo apt install -y mongodb-org"
 }
 
 install_mysql_master () {
-    ssh $1 "wget -q https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster_8.0.19-1ubuntu18.04_amd64.deb-bundle.tar && \
+    ssh -p $2 $1 "wget -q https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster_8.0.19-1ubuntu18.04_amd64.deb-bundle.tar && \
             mkdir mysql_install && \
             tar -xvf mysql-cluster_8.0.19-1ubuntu18.04_amd64.deb-bundle.tar -C mysql_install/ && \
             sudo apt install -y libaio1 libmecab2 && \
@@ -23,21 +23,21 @@ install_mysql_master () {
 }
 
 install_mysql_datanode () {
-    ssh $1 "wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-community-data-node_8.0.19-1ubuntu18.04_amd64.deb && \
+    ssh -p $2 $1 "wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-community-data-node_8.0.19-1ubuntu18.04_amd64.deb && \
             sudo apt install libclass-methodmaker-perl && \
             sudo dpkg -i mysql-cluster-community-data-node_8.0.19-1ubuntu18.04_amd64.deb"
 }
 
 install_dependency () {
-    ssh $1 "sudo apt update && \
+    ssh -p $2 $1 "sudo apt update && \
             sudo apt install -y openjdk-8-jdk maven"
 }
 
 source ./nodes
 
-install_mongo $node0
-install_mongo $node1
-install_mongo $node2
-install_mysql_master $node0
-install_mysql_datanode $node1
-install_mysql_datanode $node2
+# install_mongo $node0 $port
+# install_mongo $node1 $port
+install_mongo $node2 $port
+# install_mysql_master $node0 $port
+# install_mysql_datanode $node1 $port
+# install_mysql_datanode $node2 $port
